@@ -3,10 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		947CCE432EC8604E00266CE8 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 947CCE1D2EC85F3300266CE8 /* WidgetKit.framework */; };
+		947CCE442EC8604E00266CE8 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 947CCE1F2EC85F3300266CE8 /* SwiftUI.framework */; };
+		947CCE532EC8604F00266CE8 /* SafeBaiyunWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 947CCE422EC8604E00266CE8 /* SafeBaiyunWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1000001 /* SafeBaiyunApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000002 /* SafeBaiyunApp.swift */; };
 		A1000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004 /* ContentView.swift */; };
 		A1000005 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000006 /* SettingsView.swift */; };
@@ -19,7 +22,34 @@
 		A1000013 /* URLHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000014 /* URLHandler.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		947CCE512EC8604F00266CE8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1000023 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 947CCE412EC8604E00266CE8;
+			remoteInfo = SafeBaiyunWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		947CCE302EC85F3500266CE8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				947CCE532EC8604F00266CE8 /* SafeBaiyunWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		947CCE1D2EC85F3300266CE8 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		947CCE1F2EC85F3300266CE8 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		947CCE422EC8604E00266CE8 /* SafeBaiyunWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SafeBaiyunWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000000 /* SafeBaiyun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SafeBaiyun.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000002 /* SafeBaiyunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeBaiyunApp.swift; sourceTree = "<group>"; };
 		A1000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -34,7 +64,30 @@
 		A1000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		947CCE542EC8604F00266CE8 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 947CCE412EC8604E00266CE8 /* SafeBaiyunWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		947CCE452EC8604E00266CE8 /* SafeBaiyunWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (947CCE542EC8604F00266CE8 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SafeBaiyunWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		947CCE3F2EC8604E00266CE8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				947CCE442EC8604E00266CE8 /* SwiftUI.framework in Frameworks */,
+				947CCE432EC8604E00266CE8 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1000016 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -45,10 +98,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		947CCE1C2EC85F3300266CE8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				947CCE1D2EC85F3300266CE8 /* WidgetKit.framework */,
+				947CCE1F2EC85F3300266CE8 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		A1000017 = {
 			isa = PBXGroup;
 			children = (
 				A1000018 /* SafeBaiyun */,
+				947CCE452EC8604E00266CE8 /* SafeBaiyunWidget */,
+				947CCE1C2EC85F3300266CE8 /* Frameworks */,
 				A1000019 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -66,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000000 /* SafeBaiyun.app */,
+				947CCE422EC8604E00266CE8 /* SafeBaiyunWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -122,6 +187,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		947CCE412EC8604E00266CE8 /* SafeBaiyunWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 947CCE552EC8604F00266CE8 /* Build configuration list for PBXNativeTarget "SafeBaiyunWidgetExtension" */;
+			buildPhases = (
+				947CCE3E2EC8604E00266CE8 /* Sources */,
+				947CCE3F2EC8604E00266CE8 /* Frameworks */,
+				947CCE402EC8604E00266CE8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				947CCE452EC8604E00266CE8 /* SafeBaiyunWidget */,
+			);
+			name = SafeBaiyunWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = SafeBaiyunWidgetExtension;
+			productReference = 947CCE422EC8604E00266CE8 /* SafeBaiyunWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		A100001F /* SafeBaiyun */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A1000020 /* Build configuration list for PBXNativeTarget "SafeBaiyun" */;
@@ -129,10 +216,12 @@
 				A1000021 /* Sources */,
 				A1000016 /* Frameworks */,
 				A1000022 /* Resources */,
+				947CCE302EC85F3500266CE8 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				947CCE522EC8604F00266CE8 /* PBXTargetDependency */,
 			);
 			name = SafeBaiyun;
 			productName = SafeBaiyun;
@@ -146,9 +235,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					947CCE412EC8604E00266CE8 = {
+						CreatedOnToolsVersion = 16.4;
+					};
 					A100001F = {
 						CreatedOnToolsVersion = 15.0;
 					};
@@ -169,11 +261,19 @@
 			projectRoot = "";
 			targets = (
 				A100001F /* SafeBaiyun */,
+				947CCE412EC8604E00266CE8 /* SafeBaiyunWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		947CCE402EC8604E00266CE8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1000022 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -184,6 +284,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		947CCE3E2EC8604E00266CE8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1000021 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -203,7 +310,75 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		947CCE522EC8604F00266CE8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 947CCE412EC8604E00266CE8 /* SafeBaiyunWidgetExtension */;
+			targetProxy = 947CCE512EC8604F00266CE8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		947CCE562EC8604F00266CE8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8296L8ZYSP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SafeBaiyunWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SafeBaiyunWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.huacheng.safebaiyun.ios.SafeBaiyunWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		947CCE572EC8604F00266CE8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8296L8ZYSP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SafeBaiyunWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SafeBaiyunWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.huacheng.safebaiyun.ios.SafeBaiyunWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		A1000025 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -398,6 +573,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		947CCE552EC8604F00266CE8 /* Build configuration list for PBXNativeTarget "SafeBaiyunWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				947CCE562EC8604F00266CE8 /* Debug */,
+				947CCE572EC8604F00266CE8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A1000020 /* Build configuration list for PBXNativeTarget "SafeBaiyun" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

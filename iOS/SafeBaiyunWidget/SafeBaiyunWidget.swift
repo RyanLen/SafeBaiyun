@@ -1,4 +1,3 @@
-import Foundation
 import WidgetKit
 import SwiftUI
 
@@ -20,21 +19,21 @@ struct WidgetDataStore {
 
 // MARK: - 小组件提供者
 
-struct SafeBaiyunWidgetProvider: TimelineProvider {
-    func placeholder(in context: Context) -> SafeBaiyunEntry {
-        SafeBaiyunEntry(date: Date(), isConfigured: false)
+struct Provider: TimelineProvider {
+    func placeholder(in context: Context) -> SimpleEntry {
+        SimpleEntry(date: Date(), isConfigured: false)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SafeBaiyunEntry) -> ()) {
-        let entry = SafeBaiyunEntry(
+    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
+        let entry = SimpleEntry(
             date: Date(),
             isConfigured: WidgetDataStore.isConfigured
         )
         completion(entry)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<SafeBaiyunEntry>) -> ()) {
-        let entry = SafeBaiyunEntry(
+    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
+        let entry = SimpleEntry(
             date: Date(),
             isConfigured: WidgetDataStore.isConfigured
         )
@@ -47,7 +46,7 @@ struct SafeBaiyunWidgetProvider: TimelineProvider {
 
 // MARK: - 小组件条目
 
-struct SafeBaiyunEntry: TimelineEntry {
+struct SimpleEntry: TimelineEntry {
     let date: Date
     let isConfigured: Bool
 }
@@ -55,7 +54,7 @@ struct SafeBaiyunEntry: TimelineEntry {
 // MARK: - 小组件视图
 
 struct SafeBaiyunWidgetEntryView : View {
-    var entry: SafeBaiyunWidgetProvider.Entry
+    var entry: Provider.Entry
     @Environment(\.widgetFamily) var widgetFamily
 
     var body: some View {
@@ -237,14 +236,14 @@ struct LargeWidgetView: View {
     }
 }
 
-// MARK: - 小组件配置
+// MARK: - 小组件主入口
 
 @main
 struct SafeBaiyunWidget: Widget {
     let kind: String = "SafeBaiyunWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: SafeBaiyunWidgetProvider()) { entry in
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
             SafeBaiyunWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("平安白云")
@@ -258,13 +257,13 @@ struct SafeBaiyunWidget: Widget {
 struct SafeBaiyunWidget_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            SafeBaiyunWidgetEntryView(entry: SafeBaiyunEntry(date: Date(), isConfigured: true))
+            SafeBaiyunWidgetEntryView(entry: SimpleEntry(date: Date(), isConfigured: true))
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
 
-            SafeBaiyunWidgetEntryView(entry: SafeBaiyunEntry(date: Date(), isConfigured: true))
+            SafeBaiyunWidgetEntryView(entry: SimpleEntry(date: Date(), isConfigured: true))
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
 
-            SafeBaiyunWidgetEntryView(entry: SafeBaiyunEntry(date: Date(), isConfigured: true))
+            SafeBaiyunWidgetEntryView(entry: SimpleEntry(date: Date(), isConfigured: true))
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
         }
     }
