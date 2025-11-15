@@ -1,5 +1,22 @@
+import Foundation
 import WidgetKit
 import SwiftUI
+
+// MARK: - 小组件专用的简化DataStore
+
+struct WidgetDataStore {
+    static let appGroupIdentifier = "group.cn.huacheng.safebaiyun"
+
+    static var isConfigured: Bool {
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+              let macAddress = sharedDefaults.string(forKey: "macAddress"),
+              !macAddress.isEmpty else {
+            return false
+        }
+        // 简化检查，只检查MAC地址是否存在
+        return true
+    }
+}
 
 // MARK: - 小组件提供者
 
@@ -11,7 +28,7 @@ struct SafeBaiyunWidgetProvider: TimelineProvider {
     func getSnapshot(in context: Context, completion: @escaping (SafeBaiyunEntry) -> ()) {
         let entry = SafeBaiyunEntry(
             date: Date(),
-            isConfigured: DataStore.isConfiguredForWidget
+            isConfigured: WidgetDataStore.isConfigured
         )
         completion(entry)
     }
@@ -19,7 +36,7 @@ struct SafeBaiyunWidgetProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<SafeBaiyunEntry>) -> ()) {
         let entry = SafeBaiyunEntry(
             date: Date(),
-            isConfigured: DataStore.isConfiguredForWidget
+            isConfigured: WidgetDataStore.isConfigured
         )
 
         // 小组件不需要频繁更新，设置较长的更新间隔
