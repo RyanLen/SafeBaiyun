@@ -47,6 +47,21 @@ struct ContentView: View {
                     // 状态显示
                     StatusView(status: bluetoothManager.unlockStatus)
 
+                    // 详细状态信息
+                    if !bluetoothManager.detailedStatus.isEmpty {
+                        Text(bluetoothManager.detailedStatus)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+
+                    // 进度步骤（仅在解锁过程中显示）
+                    if !bluetoothManager.progressSteps.isEmpty && bluetoothManager.unlockStatus != .idle {
+                        ProgressStepsView(steps: bluetoothManager.progressSteps)
+                            .padding(.horizontal)
+                    }
+
                     Spacer()
 
                     // 底部按钮组
@@ -209,10 +224,16 @@ struct StatusView: View {
         switch status {
         case .idle:
             return ""
+        case .scanning:
+            return "magnifyingglass"
         case .connecting, .connected:
             return "antenna.radiowaves.left.and.right"
+        case .discoveringServices, .discoveringCharacteristics:
+            return "network"
         case .reading, .writing:
             return "arrow.up.arrow.down"
+        case .preparing:
+            return "gearshape"
         case .success:
             return "checkmark.circle"
         case .failed:
@@ -246,6 +267,97 @@ struct BottomButton: View {
                     .font(.caption)
             }
             .foregroundColor(.blue)
+        }
+    }
+}
+
+// MARK: - 进度步骤视图
+
+struct ProgressStepsView: View {
+    let steps: [BluetoothManager.ProgressStep]
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(steps) { step in
+                HStack(spacing: 12) {
+                    // 状态图标
+                    stepIcon(for: step.status)
+                        .frame(width: 20, height: 20)
+
+                    // 步骤标题
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(step.title)
+                            .font(.caption)
+                            .fontWeight(step.status == .inProgress ? .semibold : .regular)
+                            .foregroundColor(stepColor(for: step.status))
+
+                        if let detail = step.detail {
+                            Text(detail)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    // 进度指示器
+                    if step.status == .inProgress {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(stepBackgroundColor(for: step.status))
+                )
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func stepIcon(for status: BluetoothManager.ProgressStep.StepStatus) -> some View {
+        switch status {
+        case .pending:
+            Image(systemName: "circle")
+                .foregroundColor(.gray)
+        case .inProgress:
+            Image(systemName: "circle.dotted")
+                .foregroundColor(.blue)
+        case .completed:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+        case .failed:
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.red)
+        }
+    }
+
+    private func stepColor(for status: BluetoothManager.ProgressStep.StepStatus) -> Color {
+        switch status {
+        case .pending:
+            return .gray
+        case .inProgress:
+            return .blue
+        case .completed:
+            return .green
+        case .failed:
+            return .red
+        }
+    }
+
+    private func stepBackgroundColor(for status: BluetoothManager.ProgressStep.StepStatus) -> Color {
+        switch status {
+        case .pending:
+            return Color.gray.opacity(0.05)
+        case .inProgress:
+            return Color.blue.opacity(0.1)
+        case .completed:
+            return Color.green.opacity(0.1)
+        case .failed:
+            return Color.red.opacity(0.1)
         }
     }
 }

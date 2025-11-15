@@ -18,6 +18,8 @@ class BluetoothManager: NSObject, ObservableObject {
     @Published var unlockStatus: UnlockStatus = .idle
     @Published var errorMessage: String?
     @Published var discoveredDevices: [CBPeripheral] = []
+    @Published var detailedStatus: String = ""  // 详细状态信息
+    @Published var progressSteps: [ProgressStep] = []  // 进度步骤
 
     // MARK: - 私有属性
 
@@ -38,12 +40,32 @@ class BluetoothManager: NSObject, ObservableObject {
 
     enum UnlockStatus: String {
         case idle = "空闲"
+        case scanning = "搜索设备中..."
         case connecting = "连接中..."
         case connected = "已连接"
+        case discoveringServices = "发现服务中..."
+        case discoveringCharacteristics = "发现特征中..."
         case reading = "读取数据中..."
+        case preparing = "准备开门指令..."
         case writing = "发送开门指令..."
         case success = "开门成功"
         case failed = "开门失败"
+    }
+
+    // MARK: - 进度步骤
+
+    struct ProgressStep: Identifiable {
+        let id = UUID()
+        let title: String
+        var status: StepStatus
+        var detail: String?
+
+        enum StepStatus {
+            case pending
+            case inProgress
+            case completed
+            case failed
+        }
     }
 
     // MARK: - 初始化
@@ -89,10 +111,23 @@ class BluetoothManager: NSObject, ObservableObject {
         self.unlockCompletion = completion
 
         // 重置状态
-        unlockStatus = .connecting
+        unlockStatus = .scanning
         errorMessage = nil
+        detailedStatus = "正在初始化蓝牙连接..."
+
+        // 初始化进度步骤
+        progressSteps = [
+            ProgressStep(title: "搜索设备", status: .inProgress, detail: "扫描附近的蓝牙设备"),
+            ProgressStep(title: "建立连接", status: .pending, detail: nil),
+            ProgressStep(title: "发现服务", status: .pending, detail: nil),
+            ProgressStep(title: "读取数据", status: .pending, detail: nil),
+            ProgressStep(title: "发送指令", status: .pending, detail: nil),
+            ProgressStep(title: "等待响应", status: .pending, detail: nil)
+        ]
 
         // 开始扫描目标设备
+        print("[开始解锁] MAC地址: \(macAddress)")
+        detailedStatus = "正在搜索MAC地址为 \(macAddress) 的设备..."
         centralManager.scanForPeripherals(withServices: [MAGIC_SERVICE_UUID], options: nil)
 
         // 设置超时定时器（10秒）
@@ -111,9 +146,28 @@ class BluetoothManager: NSObject, ObservableObject {
 
     // MARK: - 私有方法
 
+    private func updateProgressStep(at index: Int, status: ProgressStep.StepStatus, detail: String? = nil) {
+        guard index < progressSteps.count else { return }
+        DispatchQueue.main.async {
+            self.progressSteps[index].status = status
+            if let detail = detail {
+                self.progressSteps[index].detail = detail
+            }
+        }
+    }
+
     private func handleTimeout() {
         unlockStatus = .failed
         errorMessage = "连接超时"
+        detailedStatus = "连接超时，请确保靠近门禁设备"
+
+        // 标记当前进行中的步骤为失败
+        for i in 0..<progressSteps.count {
+            if progressSteps[i].status == .inProgress {
+                updateProgressStep(at: i, status: .failed, detail: "超时")
+            }
+        }
+
         unlockCompletion?(false, "连接超时")
         disconnect()
     }
@@ -161,12 +215,21 @@ class BluetoothManager: NSObject, ObservableObject {
             }
         }
 
+        // 更新状态
+        unlockStatus = .discoveringCharacteristics
+        detailedStatus = "已发现 \(characteristics.count) 个特征"
+
         // 开始读取数据
         if let readChar = readCharacteristic {
+            updateProgressStep(at: 2, status: .completed, detail: "服务发现完成")
+            updateProgressStep(at: 3, status: .inProgress, detail: "正在读取设备数据...")
             unlockStatus = .reading
+            detailedStatus = "正在读取门禁数据..."
             currentPeripheral?.readValue(for: readChar)
         } else if writeCharacteristic != nil {
             // 如果没有可读特征，直接尝试写入
+            updateProgressStep(at: 2, status: .completed, detail: "服务发现完成")
+            updateProgressStep(at: 3, status: .completed, detail: "跳过数据读取")
             performUnlock()
         }
     }
@@ -176,10 +239,17 @@ class BluetoothManager: NSObject, ObservableObject {
         guard let writeChar = writeCharacteristic else {
             unlockStatus = .failed
             errorMessage = "未找到可写特征"
+            detailedStatus = "设备不支持写入操作"
+            updateProgressStep(at: 4, status: .failed, detail: "设备不支持")
             unlockCompletion?(false, "未找到可写特征")
             disconnect()
             return
         }
+
+        // 更新状态
+        unlockStatus = .preparing
+        detailedStatus = "正在构造开门指令..."
+        updateProgressStep(at: 4, status: .inProgress, detail: "构造加密数据包")
 
         // 构造开门数据包
         let dataToUse = readData ?? Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
@@ -190,6 +260,8 @@ class BluetoothManager: NSObject, ObservableObject {
         ) else {
             unlockStatus = .failed
             errorMessage = "数据包构造失败"
+            detailedStatus = "无法构造开门指令，请检查配置"
+            updateProgressStep(at: 4, status: .failed, detail: "构造失败")
             unlockCompletion?(false, "数据包构造失败")
             disconnect()
             return
@@ -197,6 +269,9 @@ class BluetoothManager: NSObject, ObservableObject {
 
         print("发送开门指令: \(LockBusiness.dataToHexString(packet))")
         unlockStatus = .writing
+        detailedStatus = "正在发送开门指令（\(packet.count)字节）..."
+        updateProgressStep(at: 4, status: .completed, detail: "数据包已构造")
+        updateProgressStep(at: 5, status: .inProgress, detail: "发送中...")
         currentPeripheral?.writeValue(packet, for: writeChar, type: .withResponse)
     }
 }
@@ -240,12 +315,18 @@ extension BluetoothManager: CBCentralManagerDelegate {
         }
 
         // 如果正在执行开锁操作，连接第一个发现的设备
-        if unlockStatus == .connecting && currentPeripheral == nil {
+        if unlockStatus == .scanning && currentPeripheral == nil {
             currentPeripheral = peripheral
             peripheral.delegate = self
             isConnecting = true
             centralManager.stopScan()
             centralManager.connect(peripheral, options: nil)
+
+            // 更新进度
+            updateProgressStep(at: 0, status: .completed, detail: "找到设备")
+            updateProgressStep(at: 1, status: .inProgress, detail: "正在建立连接...")
+            unlockStatus = .connecting
+            detailedStatus = "正在连接到设备 \(peripheral.name ?? "未知设备")..."
         }
     }
 
@@ -254,6 +335,11 @@ extension BluetoothManager: CBCentralManagerDelegate {
         isConnecting = false
         isConnected = true
         unlockStatus = .connected
+
+        // 更新进度
+        updateProgressStep(at: 1, status: .completed, detail: "连接成功")
+        updateProgressStep(at: 2, status: .inProgress, detail: "正在查找门禁服务...")
+        detailedStatus = "已连接，正在发现服务..."
 
         // 发现服务
         peripheral.discoverServices([MAGIC_SERVICE_UUID])
@@ -282,6 +368,8 @@ extension BluetoothManager: CBPeripheralDelegate {
             print("服务发现失败: \(error.localizedDescription)")
             unlockStatus = .failed
             errorMessage = "服务发现失败"
+            detailedStatus = "无法发现门禁服务: \(error.localizedDescription)"
+            updateProgressStep(at: 2, status: .failed, detail: "发现服务失败")
             unlockCompletion?(false, errorMessage)
             disconnect()
             return
@@ -291,6 +379,8 @@ extension BluetoothManager: CBPeripheralDelegate {
             print("未发现任何服务")
             unlockStatus = .failed
             errorMessage = "未发现门禁服务"
+            detailedStatus = "设备没有提供任何蓝牙服务"
+            updateProgressStep(at: 2, status: .failed, detail: "无可用服务")
             unlockCompletion?(false, errorMessage)
             disconnect()
             return
@@ -300,6 +390,8 @@ extension BluetoothManager: CBPeripheralDelegate {
         for service in services {
             if service.uuid == MAGIC_SERVICE_UUID {
                 print("找到门禁服务")
+                unlockStatus = .discoveringServices
+                detailedStatus = "已找到门禁服务，正在发现特征..."
                 handleService(service)
                 return
             }
@@ -308,6 +400,8 @@ extension BluetoothManager: CBPeripheralDelegate {
         // 如果没找到目标服务，尝试使用第一个服务
         if let firstService = services.first {
             print("使用默认服务: \(firstService.uuid)")
+            unlockStatus = .discoveringServices
+            detailedStatus = "使用默认服务"
             handleService(firstService)
         }
     }
@@ -317,6 +411,8 @@ extension BluetoothManager: CBPeripheralDelegate {
             print("特征发现失败: \(error.localizedDescription)")
             unlockStatus = .failed
             errorMessage = "特征发现失败"
+            detailedStatus = "无法发现蓝牙特征: \(error.localizedDescription)"
+            updateProgressStep(at: 2, status: .failed, detail: "特征发现失败")
             unlockCompletion?(false, errorMessage)
             disconnect()
             return
@@ -326,6 +422,8 @@ extension BluetoothManager: CBPeripheralDelegate {
             print("未发现任何特征")
             unlockStatus = .failed
             errorMessage = "未发现可用特征"
+            detailedStatus = "服务不包含任何可用的特征"
+            updateProgressStep(at: 2, status: .failed, detail: "无可用特征")
             unlockCompletion?(false, errorMessage)
             disconnect()
             return
@@ -337,6 +435,8 @@ extension BluetoothManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let error = error {
             print("读取数据失败: \(error.localizedDescription)")
+            detailedStatus = "数据读取失败，尝试继续..."
+            updateProgressStep(at: 3, status: .completed, detail: "读取失败，使用默认值")
             // 即使读取失败也尝试继续
             performUnlock()
             return
@@ -345,6 +445,8 @@ extension BluetoothManager: CBPeripheralDelegate {
         if let data = characteristic.value {
             print("读取到数据: \(LockBusiness.dataToHexString(data))")
             readData = data
+            detailedStatus = "已读取设备数据 (\(data.count)字节)"
+            updateProgressStep(at: 3, status: .completed, detail: "数据读取成功")
             performUnlock()
         }
     }
@@ -356,10 +458,14 @@ extension BluetoothManager: CBPeripheralDelegate {
             print("写入数据失败: \(error.localizedDescription)")
             unlockStatus = .failed
             errorMessage = "发送开门指令失败"
+            detailedStatus = "指令发送失败: \(error.localizedDescription)"
+            updateProgressStep(at: 5, status: .failed, detail: "发送失败")
             unlockCompletion?(false, errorMessage)
         } else {
             print("开门指令发送成功")
             unlockStatus = .success
+            detailedStatus = "开门指令已成功发送！"
+            updateProgressStep(at: 5, status: .completed, detail: "指令已发送")
             unlockCompletion?(true, nil)
         }
 
