@@ -63,12 +63,16 @@ struct SafeBaiyunWidgetEntryView : View {
         switch widgetFamily {
         case .systemSmall:
             SmallWidgetView(isConfigured: entry.isConfigured)
+                .containerBackground(.fill.tertiary, for: .widget)
         case .systemMedium:
             MediumWidgetView(isConfigured: entry.isConfigured)
+                .containerBackground(.fill.tertiary, for: .widget)
         case .systemLarge:
             LargeWidgetView(isConfigured: entry.isConfigured)
+                .containerBackground(.fill.tertiary, for: .widget)
         default:
             MediumWidgetView(isConfigured: entry.isConfigured)
+                .containerBackground(.fill.tertiary, for: .widget)
         }
     }
 }
@@ -258,12 +262,15 @@ struct SafeBaiyunWidget_Previews: PreviewProvider {
         Group {
             SafeBaiyunWidgetEntryView(entry: SimpleEntry(date: Date(), isConfigured: true))
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
+                .containerBackground(.fill.tertiary, for: .widget)
 
             SafeBaiyunWidgetEntryView(entry: SimpleEntry(date: Date(), isConfigured: true))
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
+                .containerBackground(.fill.tertiary, for: .widget)
 
             SafeBaiyunWidgetEntryView(entry: SimpleEntry(date: Date(), isConfigured: true))
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
+                .containerBackground(.fill.tertiary, for: .widget)
         }
     }
 }
