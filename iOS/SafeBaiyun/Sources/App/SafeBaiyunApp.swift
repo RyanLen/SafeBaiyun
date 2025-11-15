@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main
 struct SafeBaiyunApp: App {
