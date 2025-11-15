@@ -6,6 +6,11 @@ struct SafeBaiyunApp: App {
     @StateObject private var bluetoothManager = BluetoothManager()
     @StateObject private var dataStore = DataStore()
 
+    init() {
+        // 配置应用启动时的UI外观
+        setupAppearance()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -14,14 +19,8 @@ struct SafeBaiyunApp: App {
                 .handleURLScheme()
         }
     }
-}
 
-// MARK: - App Configuration
-extension SafeBaiyunApp {
-    init() {
-        // 配置应用启动时的设置
-        setupAppearance()
-    }
+    // MARK: - App Configuration
 
     private func setupAppearance() {
         // 设置导航栏外观
