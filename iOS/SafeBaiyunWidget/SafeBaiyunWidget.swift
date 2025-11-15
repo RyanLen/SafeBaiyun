@@ -4,6 +4,8 @@ import SwiftUI
 // MARK: - 小组件专用的简化DataStore
 
 struct WidgetDataStore {
+    // 注意：如果使用自动生成的App Group，请更新这里的ID
+    // 格式通常是: group.com.yourteamid.SafeBaiyun
     static let appGroupIdentifier = "group.cn.huacheng.safebaiyun"
 
     static var isConfigured: Bool {
@@ -79,12 +81,9 @@ struct SmallWidgetView: View {
     var body: some View {
         Link(destination: URL(string: "safebaiyun://unlock")!) {
             ZStack {
-                ContainerRelativeShape()
-                    .fill(LinearGradient(
-                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.7)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
+                // 背景
+                Color.blue
+                    .opacity(0.9)
 
                 VStack(spacing: 8) {
                     Image(systemName: isConfigured ? "lock.open" : "lock")
@@ -109,12 +108,12 @@ struct MediumWidgetView: View {
     var body: some View {
         Link(destination: URL(string: "safebaiyun://unlock")!) {
             ZStack {
-                ContainerRelativeShape()
-                    .fill(LinearGradient(
-                        gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.white]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ))
+                // 背景
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.white]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
 
                 HStack(spacing: 20) {
                     // 左侧：标题和状态
@@ -164,12 +163,12 @@ struct LargeWidgetView: View {
     var body: some View {
         Link(destination: URL(string: "safebaiyun://unlock")!) {
             ZStack {
-                ContainerRelativeShape()
-                    .fill(LinearGradient(
-                        gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.white]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ))
+                // 背景
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.white]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
 
                 VStack(spacing: 20) {
                     // 顶部：标题区域

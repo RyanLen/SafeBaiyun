@@ -50,6 +50,8 @@
 		947CCE1D2EC85F3300266CE8 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		947CCE1F2EC85F3300266CE8 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		947CCE422EC8604E00266CE8 /* SafeBaiyunWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SafeBaiyunWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		948FD5192EC88285000AA699 /* SafeBaiyun.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SafeBaiyun.entitlements; sourceTree = "<group>"; };
+		948FD51A2EC882CB000AA699 /* SafeBaiyunWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SafeBaiyunWidgetExtension.entitlements; sourceTree = "<group>"; };
 		A1000000 /* SafeBaiyun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SafeBaiyun.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000002 /* SafeBaiyunApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeBaiyunApp.swift; sourceTree = "<group>"; };
 		A1000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 		A1000017 = {
 			isa = PBXGroup;
 			children = (
+				948FD51A2EC882CB000AA699 /* SafeBaiyunWidgetExtension.entitlements */,
 				A1000018 /* SafeBaiyun */,
 				947CCE452EC8604E00266CE8 /* SafeBaiyunWidget */,
 				947CCE1C2EC85F3300266CE8 /* Frameworks */,
@@ -120,6 +123,7 @@
 		A1000018 /* SafeBaiyun */ = {
 			isa = PBXGroup;
 			children = (
+				948FD5192EC88285000AA699 /* SafeBaiyun.entitlements */,
 				A1000015 /* Info.plist */,
 				A100001A /* Sources */,
 			);
@@ -324,6 +328,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SafeBaiyunWidgetExtension.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -354,6 +359,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SafeBaiyunWidgetExtension.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -503,6 +509,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SafeBaiyun/SafeBaiyun.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -539,6 +546,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SafeBaiyun/SafeBaiyun.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
