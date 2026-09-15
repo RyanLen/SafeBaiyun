@@ -1,0 +1,62 @@
+name: Publish v1.2.0 APK release
+
+on:
+  push:
+    branches: ["release/v1.2.0"]
+    paths: [".github/workflows/publish-v1.2.0.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-v1.2.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: RyanLen/SafeBaiyun
+    steps:
+      - name: Verify source build
+        run: |
+          gh api repos/RyanLen/SafeBaiyun/actions/runs/34923838593 > source-run.json
+          python3 - <<'PY'
+          import json
+          r = json.load(open("source-run.json"))
+          assert r["conclusion"] == "success"
+          assert r["head_sha"] == "73507110df559118844c6003e656b11ff15ea47f"
+          assert r["repository"]["full_name"] == "RyanLen/SafeBaiyun"
+          PY
+      - name: Download the already tested APK
+        run: gh run download 34923838593 --name SafeBaiyun-multi-door-apk --dir dist
+      - name: Verify checksum
+        run: |
+          test -s dist/SafeBaiyun-multi-door.apk
+          sha256sum --check dist/SafeBaiyun-multi-door.apk.sha256
+          cd dist
+          sha256sum SafeBaiyun-multi-door.apk > SHA256SUMS.txt
+      - name: Publish release assets
+        run: |
+          cat > release-notes.md <<'NOTES'
+          ## 白云通 1.2.0 · 多门禁版
+          
+          下载下方 **SafeBaiyun-multi-door.apk**，直接在 Android 手机上安装，无需解压。
+          
+          - 支持多个门禁：添加、编辑、删除和设置默认门禁。
+          - 兼容旧版单门禁配置迁移。
+          - 桌面快捷方式和小部件使用默认门禁。
+          - 增加 MAC/Key 校验，修复蓝牙连接超时和连续点击处理。
+          
+          支持 Android 5.0 及以上。APK 为 Debug 签名版，已通过单元测试、Lint、编译和签名校验，实际开门需现场测试。
+          若与旧版签名冲突，请先保存所有门禁的 MAC/Key，再卸载旧版安装；卸载会清除本地数据。
+          
+          本 APK 直接取自已通过验证的 [Actions 构建](https://github.com/RyanLen/SafeBaiyun/actions/runs/34923838593)，未重新编译或更改签名。
+          源码提交：73507110df559118844c6003e656b11ff15ea47f
+          NOTES
+          gh release create v1.2.0 dist/SafeBaiyun-multi-door.apk dist/SHA256SUMS.txt --target 73507110df559118844c6003e656b11ff15ea47f --title "白云通 1.2.0 · 多门禁版" --notes-file release-notes.md --draft
+          gh release edit v1.2.0 --draft=false --latest
