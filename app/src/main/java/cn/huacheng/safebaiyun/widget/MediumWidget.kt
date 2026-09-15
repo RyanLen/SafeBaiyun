@@ -64,7 +64,7 @@ object MediumWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun WidgetContent() {
+    private fun WidgetContent(context: Context, widgetId: Int, door: Door?) {
         Row(
             modifier = GlanceModifier
                 .background(GlanceTheme.colors.surface)

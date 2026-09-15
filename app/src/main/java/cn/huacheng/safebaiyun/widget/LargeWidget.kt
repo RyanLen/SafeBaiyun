@@ -69,7 +69,7 @@ object LargeWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun WidgetContent() {
+    private fun WidgetContent(context: Context, widgetId: Int, door: Door?) {
         Column(
             modifier = GlanceModifier
                 .fillMaxWidth()
