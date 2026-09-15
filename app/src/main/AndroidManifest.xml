@@ -33,6 +33,14 @@
             android:name=".ShortcutActivity"
             android:exported="true" />
 
+        <activity
+            android:name=".widget.WidgetConfigureActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <activity-alias
             android:name="cn.huacheng.safebaiyun.QuickUnlockActivity"
             android:exported="true"

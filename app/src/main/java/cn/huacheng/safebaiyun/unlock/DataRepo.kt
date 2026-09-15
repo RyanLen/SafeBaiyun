@@ -57,6 +57,7 @@ object DataRepo {
     private fun update(value: DoorState) {
         persist(value)
         mutableState.value = value
+        cn.huacheng.safebaiyun.widget.WidgetBindingStore.refreshAll()
     }
 
     fun defaultDoor(): Door? = mutableState.value.defaultDoor()

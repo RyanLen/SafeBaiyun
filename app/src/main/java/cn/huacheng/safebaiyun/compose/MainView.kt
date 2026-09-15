@@ -40,7 +40,7 @@ fun MainView(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 Text("我的门禁（${state.doors.size}）", style = MaterialTheme.typography.titleLarge)
-                Text("桌面快捷方式和小部件使用默认门禁。", style = MaterialTheme.typography.bodyMedium)
+                Text("快捷方式使用默认门禁；桌面组件可分别绑定门禁。", style = MaterialTheme.typography.bodyMedium)
                 TextButton(onClick = { importing = true }) { Text("导入门禁") }
             }
             if (state.doors.isEmpty()) item {

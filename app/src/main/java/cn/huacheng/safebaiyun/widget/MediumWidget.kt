@@ -1,6 +1,12 @@
 package cn.huacheng.safebaiyun.widget
 
 import android.content.Context
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.action.clickable
+import cn.huacheng.safebaiyun.unlock.DataRepo
+import cn.huacheng.safebaiyun.unlock.Door
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +41,7 @@ import cn.huacheng.safebaiyun.R
  *@create: 2024-05-06
  */
 
-class MediumReceiver : GlanceAppWidgetReceiver() {
+class MediumReceiver : DoorWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget
         get() = MediumWidget
 }
@@ -46,9 +52,13 @@ object MediumWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Single
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         provideContent {
+            val doors by DataRepo.state.collectAsState()
+            val bindings by WidgetBindingStore.state.collectAsState()
+            val door = bindings.resolve(widgetId, doors)
             GlanceTheme {
-                WidgetContent()
+                WidgetContent(context, widgetId, door)
             }
         }
     }
@@ -63,20 +73,23 @@ object MediumWidget : GlanceAppWidget() {
                 .padding(start = 24.dp, top = 12.dp, bottom = 12.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(
-                    text = "白云通",
+                    text = door?.name ?: "请选择门禁",
+                    maxLines = 1,
                     style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp),
                 )
-                Text(text = "解锁默认门禁", style = TextStyle(fontSize = 14.sp))
+                Text(text = if (door == null) "点击选择" else "更换门禁",
+                    modifier = GlanceModifier.clickable(actionStartActivity(WidgetBindingStore.configureIntent(context, widgetId))),
+                    style = TextStyle(fontSize = 14.sp))
             }
-            Spacer(modifier = GlanceModifier.defaultWeight())
             CircleIconButton(
                 imageProvider = ImageProvider(R.drawable.unlock),
-                contentDescription = "",
+                contentDescription = if (door == null) "选择门禁" else "打开" + door.name,
                 backgroundColor = GlanceTheme.colors.primary,
                 contentColor = GlanceTheme.colors.onPrimary,
-                onClick = actionStartActivity<ShortcutActivity>()
+                onClick = actionStartActivity(if (door == null) WidgetBindingStore.configureIntent(context, widgetId)
+                            else WidgetBindingStore.unlockIntent(context, widgetId))
             )
 
         }

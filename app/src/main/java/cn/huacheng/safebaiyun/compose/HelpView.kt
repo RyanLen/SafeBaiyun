@@ -54,7 +54,7 @@ fun AppHelper() {
     Text(text = "1.3 查看DB文件")
     Text(text = "随便找个支持查看 sqlite 数据库的软件，打开.db文件，查询t_device表， 其中 MAC_NUM 是 mac 地址 PRODUCT_KEY 就是加密key")
     Text(text = "2. 点击添加门禁，填写名称、MAC 地址和 Key。可添加、编辑和删除多个门禁。")
-    Text(text = "3. 点击对应门禁的开门按钮；桌面快捷方式和小部件使用设为默认的门禁。", fontWeight = FontWeight.Medium)
+    Text(text = "3. 点击对应门禁的开门按钮；桌面快捷方式使用默认门禁；小部件在添加时独立选择门禁。", fontWeight = FontWeight.Medium)
 }
 
 
@@ -92,7 +92,7 @@ private fun WidgetHelper() {
         modifier = Modifier.padding(top = 8.dp),
         style = MaterialTheme.typography.titleLarge
     )
-    Text(text = "桌面小部件类似于快捷方式，但是可以有更多的样式。本App提供了大中三种样式。可以在桌面长按空白处，然后选择“添加小部件”")
+    Text(text = "桌面小部件类似于快捷方式，但是可以有更多的样式。本App提供了大、中两种样式。可以在桌面长按空白处，然后选择“添加小部件”。每次添加都会选择门禁，可重复添加同一种样式并选择不同门禁。组件显示门禁名称，点击“更换门禁”可重新选择。绑定门禁被删除后需重新选择，不会打开其他默认门禁。")
     Text(text = "在低于Android12的手机上小部件不会正常显示，建议不要使用。")
 
 }

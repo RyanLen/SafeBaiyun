@@ -1,6 +1,8 @@
 package cn.huacheng.safebaiyun
 
 import android.Manifest
+import android.appwidget.AppWidgetManager
+import cn.huacheng.safebaiyun.widget.WidgetBindingStore
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -56,20 +58,35 @@ class ShortcutActivity : ComponentActivity() {
     }
 
     private fun unlock() {
+        val fromWidget = intent.hasExtra(AppWidgetManager.EXTRA_APPWIDGET_ID)
+        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        if (fromWidget && !WidgetBindingStore.isOwnWidget(this, widgetId)) {
+            showToast("组件已失效，请重新添加")
+            finish()
+            return
+        }
+        val door = if (fromWidget) WidgetBindingStore.state.value.resolve(widgetId, DataRepo.state.value)
+            else DataRepo.defaultDoor()
+        if (fromWidget && door == null) {
+            showToast("请为此组件重新选择门禁")
+            startActivity(WidgetBindingStore.configureIntent(this, widgetId))
+            finish()
+            return
+        }
         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         } else {
             true
         }
 
-        if (!hasPermission || DataRepo.readData().first.isEmpty()) {
+        if (!hasPermission || door == null) {
             showToast("请先初始化")
             startActivity(Intent(this,MainActivity::class.java))
             finish()
             return
         }
         showToast("开始解锁门禁")
-        UnlockRepo.unlock()
+        UnlockRepo.unlock(door)
         finish()
     }
 }

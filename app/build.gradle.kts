@@ -12,8 +12,8 @@ android {
         applicationId = "cn.huacheng.safebaiyun"
         minSdk = 21
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3.0"
+        versionCode = 5
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
