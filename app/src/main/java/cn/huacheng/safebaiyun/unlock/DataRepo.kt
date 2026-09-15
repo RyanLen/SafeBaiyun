@@ -47,6 +47,13 @@ object DataRepo {
         update(mutableState.value.copy(defaultId = id))
     }
 
+    @Synchronized
+    fun importDoors(doors: List<SharedDoor>, replaceExisting: Boolean): DoorImportResult {
+        val result = DoorTransfer.merge(mutableState.value, doors, replaceExisting)
+        if (result.added + result.updated > 0) update(result.state)
+        return result
+    }
+
     private fun update(value: DoorState) {
         persist(value)
         mutableState.value = value

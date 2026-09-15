@@ -56,3 +56,37 @@ jobs:
             app/build/reports/tests/
             app/build/reports/lint-results-debug.*
           if-no-files-found: ignore
+
+  publish-sharing-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/door-sharing'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SafeBaiyun-multi-door-apk
+          path: dist
+      - name: Verify and publish v1.3.0
+        run: |
+          sha256sum --check dist/SafeBaiyun-multi-door.apk.sha256
+          (cd dist && sha256sum SafeBaiyun-multi-door.apk > SHA256SUMS.txt)
+          cat > notes.md <<'NOTES'
+          ## 白云通 1.3.0 · 门禁配置分享
+          - 单个或全部门禁可导出 JSON，复制到剪贴板或通过系统分享。
+          - 接收方粘贴 JSON，预览后确认导入，无需逐项输入。
+          - 相同 MAC 默认跳过；可明确选择覆盖名称和 Key，保留默认门禁。
+          - 导入前校验格式、数量和重复项，整批保存，避免部分导入。
+          - 分享内容包含未加密的开门密钥，请只发送给可信的人。
+
+          下载下方 SafeBaiyun-multi-door.apk 直接安装。Android 5.0+，Debug 签名版。
+          本次签名可能与 1.2.0 不同：请先保存旧版全部 MAC/Key，再卸载旧版安装；卸载会清除数据。
+          单元测试、Lint、构建和签名检查由 Actions 验证；实际蓝牙开门需现场测试。
+          NOTES
+          gh release create v1.3.0 dist/SafeBaiyun-multi-door.apk dist/SHA256SUMS.txt --target "$GITHUB_SHA" --title "白云通 1.3.0 · 门禁配置分享" --notes-file notes.md --draft
+          gh release edit v1.3.0 --draft=false --latest

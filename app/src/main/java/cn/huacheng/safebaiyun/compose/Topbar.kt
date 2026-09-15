@@ -30,7 +30,8 @@ import cn.huacheng.safebaiyun.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopBar(onEditClick: () -> Unit, onHelperClick: () -> Unit) {
+fun MainTopBar(onEditClick: () -> Unit, onHelperClick: () -> Unit,
+    onImportClick: () -> Unit = {}, onExportClick: () -> Unit = {}, canExport: Boolean = false) {
 
     val showMenu = remember {
         mutableStateOf(false)
@@ -49,7 +50,7 @@ fun MainTopBar(onEditClick: () -> Unit, onHelperClick: () -> Unit) {
         IconButton(onClick = { showMenu.value = true }) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = null,
+                contentDescription = "更多操作",
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }
@@ -57,6 +58,14 @@ fun MainTopBar(onEditClick: () -> Unit, onHelperClick: () -> Unit) {
         DropdownMenu(
             expanded = showMenu.value,
             onDismissRequest = { showMenu.value = false }) {
+            DropdownMenuItem(text = { Text("导入门禁") }, onClick = {
+                showMenu.value = false
+                onImportClick()
+            })
+            DropdownMenuItem(text = { Text("导出全部门禁") }, enabled = canExport, onClick = {
+                showMenu.value = false
+                onExportClick()
+            })
             DropdownMenuItem(text = { Text(text = "使用说明") }, onClick = {
                 showMenu.value = false
                 onHelperClick.invoke()

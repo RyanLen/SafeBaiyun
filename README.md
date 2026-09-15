@@ -18,10 +18,36 @@ MAC 格式为 AA:BB:CC:DD:EE:FF，Key 为偶数位十六进制字符。
 蓝牙操作一次只连接一个门禁；连接期间使用独立的门禁配置快照。
 「开门指令已发送」表示蓝牙写入完成，实际门是否打开需要现场确认。
 
+## 导出分享与导入（1.3.0）
+
+- 单个门禁：点击卡片「导出分享」，再选「复制 JSON」或「系统分享」。
+- 全部门禁：右上角菜单 → 导出全部门禁。
+- 接收方：点击「导入门禁」→ 粘贴 JSON → 预览 → 确认导入。
+- 重复 MAC 默认跳过；开启「覆盖相同 MAC 的门禁」后才替换名称和 Key，保留本地 ID 和默认门禁。
+- 导入会先校验整个批次，非法配置不会部分写入。支持一次最多 100 个门禁、64K 字符。
+- 配置不携带本地 ID 或默认门禁。没有任何门禁时，首个导入项成为默认门禁。
+- JSON **未加密，包含开门密钥**；只分享给可信的人。复制时设置 Android 敏感剪贴板标记；该标记只隐藏系统预览，不等于加密。App 不会自动读取剪贴板。
+- 暂不使用包含 Key 的 Deep Link；无需部署链接服务或依赖聊天软件对链接的支持。
+
+标准格式（以下为虚构示例）：
+
+\`\`\`json
+{
+  "format": "safebaiyun.doors",
+  "version": 1,
+  "doors": [
+    { "name": "小区大门", "mac": "AA:BB:CC:DD:EE:01", "key": "0011223344556677" }
+  ]
+}
+\`\`\`
+
+也接受单个 {name, mac, key} 对象或此类对象数组，以及包在 Markdown JSON 代码块中的内容。
+字段名固定为英文，名称可使用中文。
+
 ## 下载 APK
 
-进入仓库 Actions，选择成功的 **Build installable APK** 运行，
-下载 **SafeBaiyun-multi-door-apk**，解压后安装 **SafeBaiyun-multi-door.apk**。
+优先在 [Releases](https://github.com/RyanLen/SafeBaiyun/releases) 下载 `.apk` 直接安装。
+Actions 的 **SafeBaiyun-multi-door-apk** 构建产物仍保留作为备用。
 这是已签名、可独立安装运行的 Debug APK，无需连接开发电脑。
 支持 Android 5.0 及以上；原有小部件建议 Android 12 及以上使用。
 

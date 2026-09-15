@@ -25,17 +25,23 @@ fun MainView(navController: NavHostController) {
     var editorOpen by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Door?>(null) }
     var deleting by remember { mutableStateOf<Door?>(null) }
+    var importing by remember { mutableStateOf(false) }
+    var exporting by remember { mutableStateOf<List<Door>?>(null) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         showToast(if (it) "蓝牙权限已授予，请再次点击开门" else "开门需要附近设备权限")
     }
     Column(Modifier.fillMaxSize()) {
         MainTopBar(onEditClick = { editing = null; editorOpen = true },
-            onHelperClick = { navController.navigate("helper") })
+            onHelperClick = { navController.navigate("helper") },
+            onImportClick = { importing = true },
+            onExportClick = { exporting = state.doors },
+            canExport = state.doors.isNotEmpty())
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 Text("我的门禁（${state.doors.size}）", style = MaterialTheme.typography.titleLarge)
                 Text("桌面快捷方式和小部件使用默认门禁。", style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = { importing = true }) { Text("导入门禁") }
             }
             if (state.doors.isEmpty()) item {
                 Text("还没有门禁，点击下方按钮添加。")
@@ -54,6 +60,8 @@ fun MainView(navController: NavHostController) {
                         }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
                             Text(if (busy) "正在连接门禁…" else "开门")
                         }
+                        OutlinedButton(onClick = { exporting = listOf(door) },
+                            modifier = Modifier.fillMaxWidth()) { Text("导出分享") }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             TextButton(onClick = { DataRepo.setDefault(door.id) },
                                 enabled = state.defaultDoor()?.id != door.id) { Text("设为默认") }
@@ -67,6 +75,8 @@ fun MainView(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()) { Text("添加门禁") } }
         }
     }
+    if (importing) ImportDoorsDialog { importing = false }
+    exporting?.let { doors -> ExportDoorsDialog(doors) { exporting = null } }
     if (editorOpen) EditDialog(editing) { editorOpen = false }
     deleting?.let { door ->
         AlertDialog(onDismissRequest = { deleting = null }, title = { Text("删除门禁？") },
