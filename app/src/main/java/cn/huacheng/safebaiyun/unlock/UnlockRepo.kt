@@ -1,219 +1,196 @@
 package cn.huacheng.safebaiyun.unlock
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothGattService
-import android.bluetooth.BluetoothManager
+import android.bluetooth.*
 import android.content.Context
 import android.os.Build
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import cn.huacheng.safebaiyun.util.ContextHolder
 import cn.huacheng.safebaiyun.util.LockBiz
 import cn.huacheng.safebaiyun.util.showToast
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.asStateFlow
+import java.util.ArrayDeque
+import java.util.UUID
 
-
+/** A connection owns an immutable door snapshot; callbacks cannot use another door's key. */
 @SuppressLint("MissingPermission")
 object UnlockRepo {
+    private val handler = Handler(Looper.getMainLooper())
+    private val mutableBusy = MutableStateFlow(false)
+    val busy = mutableBusy.asStateFlow()
+    val logFlow = MutableStateFlow<List<String>>(emptyList())
+    private var session: Session? = null
+    private val serviceId = UUID.fromString("14839ac4-7d7e-415c-9a42-167340cf2339")
+    private val cccdId = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-    private const val MAGIC_SERVICE = "14839ac4-7d7e-415c-9a42-167340cf2339"
-
-    private lateinit var gatt: BluetoothGatt
-
-    private lateinit var readableCharacteristic: BluetoothGattCharacteristic
-
-    private lateinit var writeableCharacteristic: BluetoothGattCharacteristic
-
-    private lateinit var config: Pair<String, String>
-
-    private var autoDisconnectJob: Job? = null
-
-    private val logList = mutableListOf("Hello World")
-    val logFlow: MutableStateFlow<List<String>> = MutableStateFlow(logList.toList())
-
-    fun unlock() {
-        val bluetoothAdapter =
-            (ContextHolder.get()
-                .getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-
-        config = DataRepo.readData()
-
-        if (!BluetoothAdapter.checkBluetoothAddress(config.first)) {
-            showToast("Mac地址格式错误")
-            return
-        }
-        connect(bluetoothAdapter)
-
-        autoDisconnectJob = GlobalScope.launch {
-            delay(10000)
-            if (isActive) {
-                log("10s超时，自动断开链接")
-                gatt.disconnect()
-                gatt.close()
+    fun unlock(door: Door? = DataRepo.defaultDoor()) {
+        handler.post {
+            if (session != null) {
+                showToast("正在连接门禁，请稍候")
+                return@post
             }
+            if (door == null) {
+                showToast("请先添加门禁")
+                return@post
+            }
+            val error = doorValidationError(door.name, door.mac, door.key)
+            if (error != null) {
+                showToast(error)
+                return@post
+            }
+            val current = Session(door.copy(mac = normalizeMac(door.mac)))
+            session = current
+            mutableBusy.value = true
+            current.start()
         }
     }
 
-    private fun connect(bluetoothAdapter: BluetoothAdapter) {
-        val remoteDevice = bluetoothAdapter.getRemoteDevice(config.first)
-        gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            remoteDevice.connectGatt(
-                ContextHolder.get(),
-                false,
-                callback,
-                BluetoothDevice.TRANSPORT_LE
-            )
-        } else {
-            remoteDevice.connectGatt(
-                ContextHolder.get(),
-                false,
-                callback
-            )
-        }
+    private class Session(private val door: Door) {
+        private var gatt: BluetoothGatt? = null
+        private var reader: BluetoothGattCharacteristic? = null
+        private var writer: BluetoothGattCharacteristic? = null
+        private val descriptors = ArrayDeque<Pair<BluetoothGattDescriptor, ByteArray>>()
+        private var finished = false
+        private var responseSent = false
+        private val timeout = Runnable { finish("连接门禁超时，请靠近门禁重试") }
 
-        log("尝试连接蓝牙 ${this::gatt.isInitialized}")
-    }
-
-    private val callback = object : BluetoothGattCallback() {
-
-        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-            super.onConnectionStateChange(gatt, status, newState)
-            log("连接状态改变 status$status,newState$newState")
-            if (newState == BluetoothGatt.STATE_CONNECTED) {
-                autoDisconnectJob?.cancel()
-                log("开始搜索服务")
-                gatt?.discoverServices()
-            }
-        }
-
-        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            super.onServicesDiscovered(gatt, status)
-            log("搜索服务成功 $status")
-            log("搜索到以下服务：${gatt?.services?.map { it.uuid }?.joinToString(",")}")
-            handleService(gatt?.services?.find { it.uuid.toString() == MAGIC_SERVICE })
-        }
-
-        override fun onCharacteristicRead(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic,
-            value: ByteArray,
-            status: Int
-        ) {
-            //android13以上走这里
-            log("特征码读取回调 $status,${value.size}")
-            handleCharacteristicWrite(value)
-        }
-
-        @Deprecated("Deprecated in Java")
-        override fun onCharacteristicRead(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?,
-            status: Int
-        ) {
-            super.onCharacteristicRead(gatt, characteristic, status)
-            //android12及以下走这里
-            val value = characteristic?.value ?: return
-            log("特征码读取回调 $status,${value.size}")
-            handleCharacteristicWrite(value)
-        }
-
-        override fun onCharacteristicWrite(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?,
-            status: Int
-        ) {
-            super.onCharacteristicWrite(gatt, characteristic, status)
-            log("特征码写入回调")
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                showToast("开门成功")
-            } else {
-                showToast("密钥写入失败")
-            }
-            gatt?.close()
-        }
-    }
-
-    /**
-     * 找到对应的characteristic
-     */
-    private fun handleService(service: BluetoothGattService?) {
-
-        if (service == null) {
-            return
-        }
-
-        log("开始处理服务，共${service.characteristics.size}个特征")
-        val propCharacteristics = mutableListOf<BluetoothGattCharacteristic>()
-
-        service.characteristics?.forEach {
-            log("特征${it.uuid},prop:${it.properties}")
-            val properties = it.properties
-            if ((properties and 2) != 0) {
-                readableCharacteristic = it
-            }
-            if ((properties and 8) != 0) {
-                writeableCharacteristic = it
-            }
-            if ((properties and 16) != 0) {
-                propCharacteristics.add(it)
-            }
-            if ((properties and 32) != 0) {
-                propCharacteristics.add(it)
-            }
-        }
-
-        handleCharacteristics(propCharacteristics)
-    }
-
-    private fun handleCharacteristics(propCharacteristics: MutableList<BluetoothGattCharacteristic>) {
-        log("开始处理特征,写入对应数据")
-        propCharacteristics.forEach { characteristic ->
-            gatt.setCharacteristicNotification(characteristic, true)
-            characteristic.descriptors.forEach {
-                if ((characteristic.properties and 16) != 0) {
-                    characteristic.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-                } else if ((characteristic.properties and 32) != 0) {
-                    characteristic.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
+        fun start() {
+            try {
+                val manager = ContextHolder.get().getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+                val adapter = manager?.adapter
+                if (adapter == null || !adapter.isEnabled) {
+                    finish("请先开启蓝牙")
+                    return
                 }
-
-                gatt.writeDescriptor(it)
+                val device = adapter.getRemoteDevice(door.mac)
+                handler.postDelayed(timeout, 10000)
+                showToast("正在连接「${door.name}」")
+                gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    device.connectGatt(ContextHolder.get(), false, callback, BluetoothDevice.TRANSPORT_LE)
+                } else device.connectGatt(ContextHolder.get(), false, callback)
+                if (gatt == null) finish("无法连接门禁")
+            } catch (_: SecurityException) {
+                finish("请授予附近设备权限")
+            } catch (_: Exception) {
+                finish("蓝牙连接失败，请重试")
             }
         }
 
-        val result = gatt.readCharacteristic(readableCharacteristic)
-        log("特征写入结果 $result")
-    }
+        private fun dispatch(block: () -> Unit) {
+            handler.post {
+                if (!finished) {
+                    try { block() }
+                    catch (_: SecurityException) { finish("请授予附近设备权限") }
+                    catch (_: Exception) { finish("门禁通信失败，请检查配置后重试") }
+                }
+            }
+        }
 
-    private fun handleCharacteristicWrite(value: ByteArray) {
-        log("开始写入密钥")
-        val key = LockBiz.encryptData(value, LockBiz.hexToByteArray(config.first), config.second)
-        log(key.joinToString())
-        writeableCharacteristic.setValue(key)
-        writeableCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-        val result = gatt.writeCharacteristic(writeableCharacteristic)
-        log("密钥写入结果 $result")
+        private val callback = object : BluetoothGattCallback() {
+            override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) = dispatch {
+                if (status != BluetoothGatt.GATT_SUCCESS) finish("蓝牙连接失败（$status）")
+                else if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    if (!g.discoverServices()) finish("无法读取门禁服务")
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) finish("门禁连接已断开")
+            }
 
-    }
+            override fun onServicesDiscovered(g: BluetoothGatt, status: Int) = dispatch {
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    finish("无法读取门禁服务")
+                    return@dispatch
+                }
+                val service = g.getService(serviceId)
+                reader = service?.characteristics?.firstOrNull {
+                    it.properties and BluetoothGattCharacteristic.PROPERTY_READ != 0
+                }
+                writer = service?.characteristics?.firstOrNull {
+                    it.properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0
+                }
+                if (reader == null || writer == null) {
+                    finish("未找到兼容的门禁服务")
+                    return@dispatch
+                }
+                service?.characteristics?.forEach { characteristic ->
+                    val notify = characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0
+                    val indicate = characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0
+                    if (notify || indicate) {
+                        val descriptor = characteristic.getDescriptor(cccdId)
+                        if (descriptor != null) {
+                            if (!g.setCharacteristicNotification(characteristic, true)) {
+                                finish("无法订阅门禁通知")
+                                return@dispatch
+                            }
+                            descriptors.add(descriptor to if (notify) BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                                else BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
+                        }
+                    }
+                }
+                nextOperation()
+            }
 
+            override fun onDescriptorWrite(g: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) = dispatch {
+                if (status == BluetoothGatt.GATT_SUCCESS) nextOperation()
+                else finish("门禁通知设置失败")
+            }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun log(msg: String) {
-        println(msg)
-//        logList.add(msg)
-//        GlobalScope.launch {
-//            Log.e("UnlockRepo", "log: $msg")
-//            logFlow.emit(logList.toList())
-//        }
+            override fun onCharacteristicRead(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic,
+                value: ByteArray, status: Int) {
+                val snapshot = value.copyOf()
+                dispatch { sendResponse(snapshot, status) }
+            }
+
+            @Deprecated("Used on Android 12 and earlier")
+            override fun onCharacteristicRead(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+                if (Build.VERSION.SDK_INT < 33) {
+                    val snapshot = characteristic.value?.copyOf() ?: byteArrayOf()
+                    dispatch { sendResponse(snapshot, status) }
+                }
+            }
+
+            override fun onCharacteristicWrite(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) = dispatch {
+                finish(if (status == BluetoothGatt.GATT_SUCCESS) "开门指令已发送：${door.name}" else "开门指令发送失败")
+            }
+        }
+
+        @Suppress("DEPRECATION")
+        private fun nextOperation() {
+            val connection = gatt ?: return
+            val next = descriptors.poll()
+            if (next != null) {
+                next.first.value = next.second
+                if (!connection.writeDescriptor(next.first)) finish("门禁通知设置失败")
+            } else if (!connection.readCharacteristic(reader!!)) finish("无法读取门禁验证数据")
+        }
+
+        @Suppress("DEPRECATION")
+        private fun sendResponse(value: ByteArray, status: Int) {
+            if (responseSent) return
+            if (status != BluetoothGatt.GATT_SUCCESS || value.isEmpty()) {
+                finish("门禁验证数据读取失败")
+                return
+            }
+            val data = LockBiz.encryptData(value, LockBiz.hexToByteArray(door.mac), door.key)
+            val characteristic = writer ?: return
+            responseSent = true
+            characteristic.value = data
+            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            if (gatt?.writeCharacteristic(characteristic) != true) finish("开门指令发送失败")
+        }
+
+        private fun finish(message: String) {
+            if (finished) return
+            finished = true
+            handler.removeCallbacks(timeout)
+            try { gatt?.disconnect() } catch (_: Exception) { }
+            try { gatt?.close() } catch (_: Exception) { }
+            gatt = null
+            if (session === this) {
+                session = null
+                mutableBusy.value = false
+            }
+            showToast(message)
+        }
     }
 }

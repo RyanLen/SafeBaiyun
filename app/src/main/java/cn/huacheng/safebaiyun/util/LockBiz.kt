@@ -16,8 +16,6 @@ object LockBiz {
         for (i in headerBytesSubset.indices) {
             headerBytesSubset[i] = headerData[i + 2]
         }
-        println(headerData.contentToString())
-        println(headerBytesSubset.contentToString())
         var sum = 0
         for (byte in inputData) {
             sum += Integer.parseInt(ByteUtil.byteToHex(byte), 16)
@@ -37,9 +35,6 @@ object LockBiz {
             paddedData[i] = 0
         }
         System.arraycopy(FDes.encryptData(paddedData, keyBytes), 0, encryptedBlock, 0, 8)
-        println("Sum: $sum")
-        println("Before encryption: " + ByteUtil.bytesToHex(paddedData))
-        println("After encryption: " + ByteUtil.bytesToHex(encryptedBlock))
         val finalDataLength = (encryptedBlock.size + 12).toByte()
         val finalData = ByteArray(encryptedBlock.size + 12)
         finalData[0] = -91

@@ -2,7 +2,7 @@ package cn.huacheng.safebaiyun.compose
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -41,8 +41,8 @@ fun MainTopBar(onEditClick: () -> Unit, onHelperClick: () -> Unit) {
     ), title = { Text(text = stringResource(id = R.string.app_name)) }, actions = {
         IconButton(onClick = onEditClick) {
             Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = "",
+                imageVector = Icons.Default.Add,
+                contentDescription = "添加门禁",
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }

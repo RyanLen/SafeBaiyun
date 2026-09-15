@@ -53,8 +53,8 @@ fun AppHelper() {
     Text(text = "使用MIUI的备份功能提取数据文件，前往 设置->我的设备->备份与恢复->手机备份 只选中平安回家这个软件进行备份即可，备份完成之后用 MT 管理器打开 /sdcard/MIUI/backup/AllBackup/时间/平安回家(com.huacheng.baiyunuser.bak)压缩包 然后在压缩包中找到apps/com.huacheng.baiyunuser/db/(32位 hash).db将其解压出来。")
     Text(text = "1.3 查看DB文件")
     Text(text = "随便找个支持查看 sqlite 数据库的软件，打开.db文件，查询t_device表， 其中 MAC_NUM 是 mac 地址 PRODUCT_KEY 就是加密key")
-    Text(text = "2. 点击软件右上角编辑按钮，将Mac地址及Key填进去，保存")
-    Text(text = "3. 开门", fontWeight = FontWeight.Medium)
+    Text(text = "2. 点击添加门禁，填写名称、MAC 地址和 Key。可添加、编辑和删除多个门禁。")
+    Text(text = "3. 点击对应门禁的开门按钮；桌面快捷方式和小部件使用设为默认的门禁。", fontWeight = FontWeight.Medium)
 }
 
 

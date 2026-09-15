@@ -5,112 +5,73 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import cn.huacheng.safebaiyun.R
-import cn.huacheng.safebaiyun.unlock.DataRepo
-import cn.huacheng.safebaiyun.unlock.UnlockRepo
+import cn.huacheng.safebaiyun.unlock.*
 import cn.huacheng.safebaiyun.util.showToast
-
-/**
- *
- *@description:
- *@author: guangzhou
- *@create: 2024-05-10
- */
 
 @Composable
 fun MainView(navController: NavHostController) {
-
     val context = LocalContext.current
-
-    val hasPermission = remember {
-        mutableStateOf(false)
+    val state by DataRepo.state.collectAsState()
+    val busy by UnlockRepo.busy.collectAsState()
+    var editorOpen by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<Door?>(null) }
+    var deleting by remember { mutableStateOf<Door?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        showToast(if (it) "蓝牙权限已授予，请再次点击开门" else "开门需要附近设备权限")
     }
-
-    val showEditDialog = remember {
-        mutableStateOf(false)
-    }
-
-    SideEffect {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            hasPermission.value =
-                context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-        } else {
-            hasPermission.value = true
-        }
-    }
-
-    Column {
-        MainTopBar(onEditClick = {
-            showEditDialog.value = true
-        }, onHelperClick = {
-            navController.navigate("helper")
-        })
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp), contentAlignment = Alignment.Center
-        ) {
-            if (hasPermission.value) {
-                UnlockView()
-            } else {
-                PermissionView(hasPermission)
+    Column(Modifier.fillMaxSize()) {
+        MainTopBar(onEditClick = { editing = null; editorOpen = true },
+            onHelperClick = { navController.navigate("helper") })
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item {
+                Text("我的门禁（${state.doors.size}）", style = MaterialTheme.typography.titleLarge)
+                Text("桌面快捷方式和小部件使用默认门禁。", style = MaterialTheme.typography.bodyMedium)
             }
-        }
-        if (showEditDialog.value) {
-            EditDialog(state = showEditDialog) {
-                DataRepo.readData()
+            if (state.doors.isEmpty()) item {
+                Text("还没有门禁，点击下方按钮添加。")
             }
+            items(state.doors, key = { it.id }) { door ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(door.name, style = MaterialTheme.typography.titleMedium)
+                        Text(door.mac, style = MaterialTheme.typography.bodyMedium)
+                        if (state.defaultDoor()?.id == door.id) Text("默认门禁", color = MaterialTheme.colorScheme.primary)
+                        Button(onClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                                context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                                permissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                            } else UnlockRepo.unlock(door)
+                        }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (busy) "正在连接门禁…" else "开门")
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            TextButton(onClick = { DataRepo.setDefault(door.id) },
+                                enabled = state.defaultDoor()?.id != door.id) { Text("设为默认") }
+                            TextButton(onClick = { editing = door; editorOpen = true }) { Text("编辑") }
+                            TextButton(onClick = { deleting = door }) { Text("删除") }
+                        }
+                    }
+                }
+            }
+            item { OutlinedButton(onClick = { editing = null; editorOpen = true },
+                modifier = Modifier.fillMaxWidth()) { Text("添加门禁") } }
         }
     }
-
-}
-
-@Composable
-private fun UnlockView() {
-    Button(onClick = {
-        showToast("开始解锁门禁")
-        UnlockRepo.unlock()
-    }, modifier = Modifier.size(144.dp, 56.dp)) {
-        Text(text = stringResource(id = R.string.unlock_door), fontSize = 18.sp)
-    }
-}
-
-@Composable
-private fun PermissionView(hasPermission: MutableState<Boolean>) {
-    val requestPermissionLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
-            hasPermission.value = isGranted
-        }
-
-    Button(modifier = Modifier.size(144.dp, 56.dp),
-        onClick = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                requestPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
-            }
-
-        }) {
-        Text(text = stringResource(id = R.string.request_permission), fontSize = 18.sp)
-
+    if (editorOpen) EditDialog(editing) { editorOpen = false }
+    deleting?.let { door ->
+        AlertDialog(onDismissRequest = { deleting = null }, title = { Text("删除门禁？") },
+            text = { Text("确定删除「${door.name}」？删除后需重新填写 MAC 和 Key。") },
+            confirmButton = { TextButton(onClick = { DataRepo.remove(door.id); deleting = null }) { Text("删除") } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text("取消") } })
     }
 }
-

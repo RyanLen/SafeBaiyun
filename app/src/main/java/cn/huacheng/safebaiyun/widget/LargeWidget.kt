@@ -93,7 +93,7 @@ object LargeWidget : GlanceAppWidget() {
                 text = "平安白云门禁",
                 style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 16.sp),
             )
-            Text(text = "点击解锁门禁", style = TextStyle(fontSize = 14.sp))
+            Text(text = "点击解锁默认门禁", style = TextStyle(fontSize = 14.sp))
         }
 
     }
